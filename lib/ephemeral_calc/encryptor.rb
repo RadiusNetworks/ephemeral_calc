@@ -22,6 +22,10 @@ module EphemeralCalc
       Time.now.to_i - self.initial_time
     end
 
+    def quantum
+      beacon_time / (2**rotation_scalar)
+    end
+
     # Output is an 8-byte encrypted identifier as a hex string
     # e.g. "0102030405060708"
     def get_identifier(beacon_time = nil)
@@ -31,6 +35,19 @@ module EphemeralCalc
       # the identifier is the first 8 bytes of the encrypted output
       identifier_array = encrypted_data[0,8]
       identifier_array.map{|b| sprintf("%02X",b)}.join
+    end
+
+    # yields the current EID and each subsuquent EID, until the block returns :stop
+    def each_identifier
+      rotation_seconds = 2**rotation_scalar
+      last_quantum = nil
+      loop do
+        if quantum != last_quantum
+          last_quantum = quantum
+          break if :stop == yield( get_identifier )
+        end
+        sleep 1
+      end
     end
 
   private

@@ -16,6 +16,20 @@ rotation_exponent = 10
 encryptor = EphemeralCalc::Encryptor.new identity_key, rotation_exponent
 # get the initial eid
 initial_eid = encryptor.get_identifier(0)
+
+# yield eid values as it rotates
+encryptor.each_identifier do |eid|
+  puts "Quantum: #{encryptor.quantum}, EID: #{eid}"
+end
+```
+
+# Command Line Usage
+The `ephemeral_calc` executable is included to allow you to generate keypairs, and do general eid calculation
+without having to write any code.
+
+```
+# display CLI help
+ephemeral_calc
 ```
 
 ## Development
