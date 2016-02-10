@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+
+
+require 'ephemeral_calc'
+
+
+class App
+
+  def help
+    help_text = <<eos
+Usage:
+    ephemeral_calc <command> <arguments>
+
+Commands:
+  eid:
+    ephemeral_calc eid <identity_key_hex> <rotation_scaler> <beacon_time_seconds>
+
+eos
+    puts help_text
+  end
+
+  def eid
+    identity_key = ARGV.shift
+    rotation_scalar = ARGV.shift.to_i
+    beacon_time = (ARGV.shift || 0).to_i
+    encryptor = EidUtils::Encryptor.new identity_key, rotation_scalar
+    quantum = beacon_time / 2**rotation_scalar
+    eid = encryptor.get_identifier(beacon_time)
+    puts "Identity Key: #{identity_key}"
+    puts " Beacon Time: #{beacon_time}"
+    puts "     Quantum: #{quantum}"
+    puts "Ephemeral ID: #{eid}"
+  end
+end
+
+app = App.new
+command = ARGV.shift
+
+if command && app.respond_to?(command)
+  app.send(command)
+else
+  app.help
+end
