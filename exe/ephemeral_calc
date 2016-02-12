@@ -37,11 +37,17 @@ Commands:
     ephemeral_calc keygen
 
     Generates a curve25519 keypair
+
+  time:
+    ephemeral_calc time <identity_key_hex> <rotation_scaler> <search_start_time> <desired_eid> <max_iterations>(optional)
+
+    Searches ahead and behind of <search_start_time> in 2**<rotation_scalar> increments for an EID matching
+    the one provided. Search will look ahead and behind 100 iterations (or <max_iterations> if provided)
 eos
     puts help_text
   end
 
-  COMMANDS = [:beacon, :track, :eid, :keygen]
+  COMMANDS = [:beacon, :track, :eid, :keygen, :time]
 
   def beacon(track = false)
     identity_key = ARGV.shift
@@ -92,6 +98,41 @@ eos
     key_pair = EphemeralCalc::KeyPair.new
     puts "Private Key: #{to_hex(key_pair.private_key)}"
     puts " Public Key: #{to_hex(key_pair.public_key)}"
+  end
+
+  def time
+    identity_key = ARGV.shift
+    rotation_scalar = ARGV.shift.to_i
+    search_start_time = ARGV.shift.to_i
+    desired_eid = ARGV.shift
+    max_iterations = (ARGV.shift || 100).to_i
+    eid_time = nil
+    (0..max_iterations).each do |iteration|
+      nearest_scalar_time = (search_start_time / (2**rotation_scalar)) * 2**rotation_scalar
+      search_time_up = nearest_scalar_time + iteration*(2**rotation_scalar)
+      search_time_down = nearest_scalar_time - iteration*(2**rotation_scalar)
+
+      encryptor = EphemeralCalc::Encryptor.new identity_key, rotation_scalar
+
+      candidate_eid = encryptor.get_identifier(search_time_up)
+      if candidate_eid == desired_eid
+        eid_time = search_time_up
+        break
+      end
+
+      candidate_eid = encryptor.get_identifier(search_time_down) unless iteration == 0
+      if candidate_eid == desired_eid
+        eid_time = search_time_down
+        break
+      end
+    end
+
+    no_match_message = "No matching EID found"
+    quantum_message = eid_time ? eid_time/2**rotation_scalar : no_match_message
+    puts "Identity Key: #{identity_key}"
+    puts " Beacon Time: #{eid_time || no_match_message}"
+    puts "     Quantum: #{quantum_message}"
+    puts "Ephemeral ID: #{desired_eid}"
   end
 
   def to_hex(bytes)
