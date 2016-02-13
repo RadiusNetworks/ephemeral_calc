@@ -60,9 +60,7 @@ module EphemeralCalc
 
     def hkdf(secret, salt)
       digest = OpenSSL::Digest.new("SHA256")
-      hmac = OpenSSL::HMAC.new(salt, digest)
-      hmac.update(secret)
-      prk = hmac.digest
+      prk = OpenSSL::HMAC.digest(digest, salt, secret)
       OpenSSL::HMAC.digest(digest, prk, "\x01")
     end
   end
