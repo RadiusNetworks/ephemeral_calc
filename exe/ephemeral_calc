@@ -14,14 +14,14 @@ Usage:
 Commands:
 
   beacon:
-    beacon <ik> <scaler> <beacon_initial_time_seconds> <service_initial_time_seconds>
+    ephemeral_calc beacon <ik> <scaler> <beacon_initial_time_seconds> <service_initial_time_seconds>
 
     Given the identity key, the beacon rotation exponent, and the times of
     registration for the beacon and the service, this computes the eid that the
     beacon is currently broadcasting.
 
   track:
-    track <ik> <scaler> <beacon_initial_time_seconds> <service_initial_time_seconds>
+    ephemeral_calc track <ik> <scaler> <beacon_initial_time_seconds> <service_initial_time_seconds>
 
     Given the identity key, the beacon rotation exponent, and the times of
     registration for the beacon and the service, this displays the current eid and
