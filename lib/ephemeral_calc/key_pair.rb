@@ -50,12 +50,11 @@ module EphemeralCalc
     def self.generate_private_key
       # reference: https://code.google.com/archive/p/curve25519-donna/
       # See section on "generating a private key"
-      key = SecureRandom.random_bytes(32)
-      first_byte = key[0].unpack("C")[0] & 248
-      key[0] = [first_byte].pack("C")
-      last_byte = (key[31].unpack("C")[0] & 127) | 64
-      key[31] = [last_byte].pack("C")
-      return key
+      key = SecureRandom.random_bytes(32).bytes
+      key[0] &= 248
+      key[31] &= 127
+      key[31] |= 64
+      return key.pack("C*")
     end
 
     def hkdf(secret, salt)
