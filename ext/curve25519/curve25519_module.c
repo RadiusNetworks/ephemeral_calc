@@ -6,14 +6,20 @@ int curve25519_donna(uint8_t *mypublic, const uint8_t *secret, const uint8_t *ba
 
 VALUE method_mult(VALUE klass, VALUE a, VALUE b)
 {
-  uint8_t buffer[32];
+  VALUE result;
   if (TYPE(a) != T_STRING || RSTRING_LEN(a) != 32 ||
       TYPE(b) != T_STRING || RSTRING_LEN(b) != 32)
   {
     rb_raise(rb_eArgError, "Both arguments must be 32 byte strings");
   }
-  curve25519_donna(buffer, (uint8_t*)RSTRING_PTR(a), (uint8_t*)RSTRING_PTR(b));
-  return rb_str_new((char*)buffer, 32);
+  result = rb_str_buf_new(32);
+  rb_str_set_len(result, 32);
+  curve25519_donna(
+    (uint8_t*)RSTRING_PTR(result),
+    (uint8_t*)RSTRING_PTR(a),
+    (uint8_t*)RSTRING_PTR(b)
+  );
+  return result;
 }
 
 void Init_curve25519()
