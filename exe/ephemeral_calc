@@ -100,14 +100,13 @@ eos
     count = ARGV.shift.to_i
     encryptor = EphemeralCalc::Encryptor.new identity_key, rotation_scalar
     start_quantum = beacon_time / 2**rotation_scalar
-    end_quantum = start_quantum + count
+    end_quantum = start_quantum + count - 1
     start_quantum.upto(end_quantum) do |quantum|
       start_time = quantum * 2**rotation_scalar
       end_time = start_time + 2**rotation_scalar
       eid = encryptor.get_identifier(start_time)
-      puts "Quantum: #{quantum} (#{start_time}s - #{end_time}s), EID: #{eid}"
+      puts "EID: #{eid}, Quantum: #{quantum} (#{seconds_display(start_time)} - #{seconds_display(end_time)})"
     end
-
   end
 
   def keygen
@@ -118,6 +117,19 @@ eos
 
   def to_hex(bytes)
     bytes.unpack("H*")[0].upcase
+  end
+
+  def seconds_display(seconds)
+    case
+    when seconds >= 86400
+      "#{seconds / 86400}d " + seconds_display(seconds % 86400)
+    when seconds >= 3600
+      "#{seconds / 3600}h " + seconds_display(seconds % 3600)
+    when seconds >= 60
+      "#{seconds / 60}m " + seconds_display(seconds % 60)
+    else
+      "#{seconds}s"
+    end
   end
 end
 
