@@ -25,12 +25,11 @@ Gem::Specification.new do |spec|
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
+  spec.extensions    = %w[ext/curve25519/extconf.rb]
   spec.require_paths = ["lib"]
-
-  spec.add_runtime_dependency "rbnacl-libsodium", "~> 1.0.8"
-  spec.add_runtime_dependency "hkdf", "~> 0.2.0"
 
   spec.add_development_dependency "bundler", "~> 1.10"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec"
+  spec.add_development_dependency "rake-compiler"
 end

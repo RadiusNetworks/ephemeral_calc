@@ -1,5 +1,4 @@
-require 'rbnacl/libsodium'
-require 'hkdf'
+require 'openssl'
 
 module EphemeralCalc
   class KeyPair
@@ -15,15 +14,12 @@ module EphemeralCalc
 
     def public_key
       @public_key ||= begin
-        base_point = RbNaCl::GroupElements::Curve25519.base
-        base_point.mult(self.private_key).to_s
+        Curve25519.mult(self.private_key, Curve25519::BASEPOINT)
       end
     end
 
     def shared_secret(other_public_key)
-      curve_25519_my_private_key = RbNaCl::GroupElements::Curve25519.new(private_key)
-      curve_22519_other_public_key = RbNaCl::GroupElements::Curve25519.new(convert_key(other_public_key))
-      curve_22519_other_public_key.mult(curve_25519_my_private_key).to_bytes
+      Curve25519.mult(self.private_key, other_public_key)
     end
 
     # opts must contain the key :resolver_public_key or :beacon_public_key
@@ -40,7 +36,7 @@ module EphemeralCalc
         raise ArgumentError, "Must pass a resolver_public_key or a beacon_public_key"
       end
       salt = resolver_public_key + beacon_public_key
-      HKDF.new(secret, salt: salt).next_bytes(16)
+      hkdf(secret, salt)[0..15]
     end
 
     def convert_key(key_string)
@@ -52,8 +48,19 @@ module EphemeralCalc
     end
 
     def self.generate_private_key
-      RbNaCl::Random.random_bytes(32)
+      # reference: https://code.google.com/archive/p/curve25519-donna/
+      # See section on "generating a private key"
+      key = SecureRandom.random_bytes(32).bytes
+      key[0] &= 248
+      key[31] &= 127
+      key[31] |= 64
+      return key.pack("C*")
     end
 
+    def hkdf(secret, salt)
+      digest = OpenSSL::Digest.new("SHA256")
+      prk = OpenSSL::HMAC.digest(digest, salt, secret)
+      OpenSSL::HMAC.digest(digest, prk, "\x01")
+    end
   end
 end
