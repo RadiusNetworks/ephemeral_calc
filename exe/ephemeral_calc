@@ -3,7 +3,6 @@
 
 require 'ephemeral_calc'
 
-
 class App
 
   def help
@@ -38,6 +37,9 @@ Commands:
 
     Lists <count> EIDs, starting at <beacon_time_seconds>
 
+  resolve:
+    ephemeral_calc resolve <api_key> <eid_hex>
+
   keygen:
     ephemeral_calc keygen
 
@@ -46,7 +48,7 @@ eos
     puts help_text
   end
 
-  COMMANDS = [:beacon, :track, :eid, :list, :keygen]
+  COMMANDS = [:beacon, :track, :eid, :list, :resolve, :keygen]
 
   def beacon(track = false)
     identity_key = ARGV.shift
@@ -61,7 +63,7 @@ eos
     next_eid = encryptor.get_identifier(beacon_time + 2**rotation_scalar)
 
     if !track
-      puts "Previous EID: #{previous_eid}"
+      puts "Previous EID: #{previous_eid}" if previous_eid
       puts " Current EID: #{current_eid}"
       puts "    Next EID: #{next_eid}"
     else
@@ -106,6 +108,18 @@ eos
       end_time = start_time + 2**rotation_scalar
       eid = encryptor.get_identifier(start_time)
       puts "EID: #{eid}, Quantum: #{quantum} (#{seconds_display(start_time)} - #{seconds_display(end_time)})"
+    end
+  end
+
+  def resolve
+    require 'yaml'
+    api_key = ARGV.shift
+    eid_hex = ARGV.shift
+    response = EphemeralCalc::GoogleResolver.resolve api_key, eid_hex
+    if response == nil
+      puts "Does not resolve!"
+    else
+      puts response.to_yaml
     end
   end
 
