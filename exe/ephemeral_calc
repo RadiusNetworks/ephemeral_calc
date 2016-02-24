@@ -33,6 +33,11 @@ Commands:
     Generates an EID from the given 16-bytes identity key, the scaler and the
     beacon time in seconds.
 
+  list:
+    ephemeral_calc list <identity_key_hex> <rotation_scaler> <beacon_time_seconds> <count>
+
+    Lists <count> EIDs, starting at <beacon_time_seconds>
+
   keygen:
     ephemeral_calc keygen
 
@@ -41,7 +46,7 @@ eos
     puts help_text
   end
 
-  COMMANDS = [:beacon, :track, :eid, :keygen]
+  COMMANDS = [:beacon, :track, :eid, :list, :keygen]
 
   def beacon(track = false)
     identity_key = ARGV.shift
@@ -88,6 +93,22 @@ eos
     puts "Ephemeral ID: #{eid}"
   end
 
+  def list
+    identity_key = ARGV.shift
+    rotation_scalar = ARGV.shift.to_i
+    beacon_time = ARGV.shift.to_i
+    count = ARGV.shift.to_i
+    encryptor = EphemeralCalc::Encryptor.new identity_key, rotation_scalar
+    start_quantum = beacon_time / 2**rotation_scalar
+    end_quantum = start_quantum + count - 1
+    start_quantum.upto(end_quantum) do |quantum|
+      start_time = quantum * 2**rotation_scalar
+      end_time = start_time + 2**rotation_scalar
+      eid = encryptor.get_identifier(start_time)
+      puts "EID: #{eid}, Quantum: #{quantum} (#{seconds_display(start_time)} - #{seconds_display(end_time)})"
+    end
+  end
+
   def keygen
     key_pair = EphemeralCalc::KeyPair.new
     puts "Private Key: #{to_hex(key_pair.private_key)}"
@@ -96,6 +117,19 @@ eos
 
   def to_hex(bytes)
     bytes.unpack("H*")[0].upcase
+  end
+
+  def seconds_display(seconds)
+    case
+    when seconds >= 86400
+      "#{seconds / 86400}d " + seconds_display(seconds % 86400)
+    when seconds >= 3600
+      "#{seconds / 3600}h " + seconds_display(seconds % 3600)
+    when seconds >= 60
+      "#{seconds / 60}m " + seconds_display(seconds % 60)
+    else
+      "#{seconds}s"
+    end
   end
 end
 
