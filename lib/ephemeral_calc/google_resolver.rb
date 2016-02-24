@@ -9,15 +9,7 @@ module EphemeralCalc
     GETFOROBSERVED_URI = URI("https://proximitybeacon.googleapis.com/v1beta1/beaconinfo:getforobserved")
 
     def self.resolve(api_key, eid)
-      # TODO: figure out why SSL verification is failing, fix, and reenable!
-      http_opts = {use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE}
-      response = Net::HTTP.start(GETFOROBSERVED_URI.host, GETFOROBSERVED_URI.port, http_opts) do |http|
-        request = Net::HTTP::Post.new "#{GETFOROBSERVED_URI.request_uri}?key=#{api_key}"
-        request.body = observations(eid).to_json
-        request.add_field "Content-Type", "application/json"
-        request.add_field "Accepts", "application/json"
-        http.request request
-      end
+      response = get_for_observed(api_key, eid)
       if response.code.to_i == 200
         json = JSON.parse(response.body)
         if json["beacons"]
@@ -26,11 +18,23 @@ module EphemeralCalc
           return nil
         end
       else
-        raise RuntimeError, "Error #{response.code} (#{response.msg}) - #{GETFOROBSERVED_URI}"
+        raise RuntimeError, "Error #{response.code} (#{response.msg}) - #{GETFOROBSERVED_URI}\n#{response.body}"
       end
     end
 
     private
+
+    def self.get_for_observed(api_key, eid)
+      # TODO: figure out why SSL verification is failing, fix, and reenable!
+      http_opts = {use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE}
+      Net::HTTP.start(GETFOROBSERVED_URI.host, GETFOROBSERVED_URI.port, http_opts) do |http|
+        request = Net::HTTP::Post.new "#{GETFOROBSERVED_URI.request_uri}?key=#{api_key}"
+        request.body = observations(eid).to_json
+        request.add_field "Content-Type", "application/json"
+        request.add_field "Accepts", "application/json"
+        http.request request
+      end
+    end
 
     def self.observations(eids)
       observations = Array(eids).map {|eid| {advertisedId: {type: "EDDYSTONE_EID", id: base64(eid)}}}
