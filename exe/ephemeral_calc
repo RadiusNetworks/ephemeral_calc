@@ -40,6 +40,9 @@ Commands:
   resolve:
     ephemeral_calc resolve <api_key> <eid_hex>
 
+    Resolves the given EID to a beacon contained in Google's Proximity Beacon API.  You must supply an
+    api key connected to the google project which contains the beacon.
+
   keygen:
     ephemeral_calc keygen
 
