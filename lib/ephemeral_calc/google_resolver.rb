@@ -43,9 +43,9 @@ module EphemeralCalc
 
     def self.base64(eid)
       if eid.size == 16
-        Base64.encode64([eid].pack("H*"))
+        Base64.strict_encode64([eid].pack("H*"))
       else
-        Base64.encode64(eid)
+        Base64.strict_encode64(eid)
       end
     end
 
