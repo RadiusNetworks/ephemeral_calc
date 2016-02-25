@@ -31,7 +31,7 @@ module EphemeralCalc
         request = Net::HTTP::Post.new "#{GETFOROBSERVED_URI.request_uri}?key=#{api_key}"
         request.body = observations(eid).to_json
         request.add_field "Content-Type", "application/json"
-        request.add_field "Accepts", "application/json"
+        request.add_field "Accept", "application/json"
         http.request request
       end
     end
