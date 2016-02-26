@@ -25,8 +25,7 @@ module EphemeralCalc
     private
 
     def self.get_for_observed(api_key, eid)
-      # TODO: figure out why SSL verification is failing, fix, and reenable!
-      http_opts = {use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE}
+      http_opts = {use_ssl: true}
       Net::HTTP.start(GETFOROBSERVED_URI.host, GETFOROBSERVED_URI.port, http_opts) do |http|
         request = Net::HTTP::Post.new "#{GETFOROBSERVED_URI.request_uri}?key=#{api_key}"
         request.body = observations(eid).to_json
