@@ -30,6 +30,7 @@ module EphemeralCalc
     # e.g. "0102030405060708"
     def get_identifier(beacon_time = nil)
       beacon_time ||= self.beacon_time
+      return nil if beacon_time < 0
       temporary_key = do_aes_encryption(self.identity_key, key_generation_data_block(beacon_time))
       encrypted_data = do_aes_encryption(temporary_key, data_block(beacon_time)).bytes.to_a
       # the identifier is the first 8 bytes of the encrypted output
