@@ -28,7 +28,10 @@ module EphemeralCalc
       http_opts = {use_ssl: true}
       Net::HTTP.start(GETFOROBSERVED_URI.host, GETFOROBSERVED_URI.port, http_opts) do |http|
         request = Net::HTTP::Post.new "#{GETFOROBSERVED_URI.request_uri}?key=#{api_key}"
-        request.body = observations(eid).to_json
+        request.body = {
+          observations: observations(eid),
+          namespacedTypes: "*",
+        }.to_json
         request.add_field "Content-Type", "application/json"
         request.add_field "Accept", "application/json"
         http.request request
@@ -36,8 +39,7 @@ module EphemeralCalc
     end
 
     def self.observations(eids)
-      observations = Array(eids).map {|eid| {advertisedId: {type: "EDDYSTONE_EID", id: base64(eid)}}}
-      return {observations: observations}
+      Array(eids).map {|eid| {advertisedId: {type: "EDDYSTONE_EID", id: base64(eid)}}}
     end
 
     def self.base64(eid)
