@@ -43,6 +43,20 @@ Commands:
     Resolves the given EID to a beacon contained in Google's Proximity Beacon API.  You must supply an
     api key connected to the google project which contains the beacon.
 
+  eidparams:
+    ephemeral_calc eid_params
+
+    Gets the EID registration parameters from Google's Proximity Beacon API. Uses environment
+    variables "GOOGLE_CLIENT_ID" and "GOOGLE_CLIENT_SECRET" to do the necessary OAuth in order to
+    access the API.
+
+  register:
+    ephemeral_calc register <beacon_public_key> <rotation_scaler> <initial_eid> <initial_clock> <namespace> <instance>
+
+    Registers an EID beacon with Google's Proximity Beacon API. All keys and byte strings should be in hex.
+    Uses environment variables "GOOGLE_CLIENT_ID" and "GOOGLE_CLIENT_SECRET" to do the necessary OAuth in
+    order to access the API.
+
   keygen:
     ephemeral_calc keygen
 
@@ -51,7 +65,7 @@ eos
     puts help_text
   end
 
-  COMMANDS = [:beacon, :track, :eid, :list, :resolve, :keygen]
+  COMMANDS = [:beacon, :track, :eid, :list, :resolve, :keygen, :eidparams, :register]
 
   def beacon(track = false)
     identity_key = ARGV.shift
@@ -126,14 +140,40 @@ eos
     end
   end
 
-  def keygen
-    key_pair = EphemeralCalc::KeyPair.new
-    puts "Private Key: #{to_hex(key_pair.private_key)}"
-    puts " Public Key: #{to_hex(key_pair.public_key)}"
+  def eidparams
+    require 'yaml'
+    eidparams = EphemeralCalc::GoogleAPI::Client.new.get_eidparams
+    key_hex = to_hex(Base64.decode64(eidparams["serviceEcdhPublicKey"]))
+    eidparams["serviceEcdhPublicKeyHex"] = key_hex
+    puts eidparams.to_yaml
   end
 
   def to_hex(bytes)
     bytes.unpack("H*")[0].upcase
+  end
+
+  def from_hex(hex)
+    [hex].pack("H*")
+  end
+
+  def register
+    require 'yaml'
+    beacon_public_key = from_hex(ARGV.shift)
+    rotation_scaler = ARGV.shift
+    initial_eid = from_hex(ARGV.shift)
+    initial_clock = ARGV.shift
+    namespace = from_hex(ARGV.shift)
+    instance = from_hex(ARGV.shift)
+    uid_bytes = namespace + instance
+    client = EphemeralCalc::GoogleAPI::Client.new
+    response = client.register_eid(beacon_public_key, rotation_scaler, initial_eid, initial_clock, uid_bytes)
+    puts response.to_yaml
+  end
+
+  def keygen
+    key_pair = EphemeralCalc::KeyPair.new
+    puts "Private Key: #{to_hex(key_pair.private_key)}"
+    puts " Public Key: #{to_hex(key_pair.public_key)}"
   end
 
   def seconds_display(seconds)
