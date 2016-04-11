@@ -142,7 +142,9 @@ eos
 
   def eidparams
     require 'yaml'
-    eidparams = EphemeralCalc::GoogleAPI::Client.new.get_eidparams
+    client = EphemeralCalc::GoogleAPI::Client.new
+    client.credentials.save
+    eidparams = client.get_eidparams
     key_hex = to_hex(Base64.decode64(eidparams["serviceEcdhPublicKey"]))
     eidparams["serviceEcdhPublicKeyHex"] = key_hex
     puts eidparams.to_yaml
@@ -166,6 +168,7 @@ eos
     instance = from_hex(ARGV.shift)
     uid_bytes = namespace + instance
     client = EphemeralCalc::GoogleAPI::Client.new
+    client.credentials.save
     response = client.register_eid(beacon_public_key, rotation_scaler, initial_eid, initial_clock, uid_bytes)
     puts response.to_yaml
   end
