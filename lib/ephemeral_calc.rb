@@ -5,6 +5,7 @@ require "ephemeral_calc/key_pair"
 require "ephemeral_calc/google_resolver"
 require "ephemeral_calc/google_api/oauth"
 require "ephemeral_calc/google_api/credentials"
+require "ephemeral_calc/google_api/request"
 require "ephemeral_calc/google_api/client"
 
 module EphemeralCalc
