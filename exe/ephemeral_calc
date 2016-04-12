@@ -44,7 +44,7 @@ Commands:
     api key connected to the google project which contains the beacon.
 
   eidparams:
-    ephemeral_calc eid_params
+    ephemeral_calc eidparams
 
     Gets the EID registration parameters from Google's Proximity Beacon API. Uses environment
     variables "GOOGLE_CLIENT_ID" and "GOOGLE_CLIENT_SECRET" to do the necessary OAuth in order to
