@@ -27,9 +27,25 @@ end
 The `ephemeral_calc` executable is included to allow you to generate keypairs, and do general eid calculation
 without having to write any code.
 
-```
+```shell
 # display CLI help
 ephemeral_calc
+
+# set up EphemeralCalc for Google OAuth
+export GOOGLE_CLIENT_ID="xxxx"
+export GOOGLE_CLIENT_SECRET="yyyy"
+
+# get EID registration parameters from Google's API using OAuth
+ephemeral_calc eidparams
+
+# resolve an EID using a Google project's API key
+API_KEY=xxxx ephemeral_calc resolve 0123456789ABCDEF
+
+# resolve EID using OAuth
+ephemeral_calc resolve 0123456789ABCDEF
+
+# list first 5 EIDs given identity key, rotation scaler
+ephemeral_calc list 553C66DA1485E9F78849DE00F2CB178E 12 0 5
 ```
 
 ## Development
