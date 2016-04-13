@@ -9,7 +9,7 @@ module EphemeralCalc
 
       PROXIMITY_BEACON_ROOT = "https://proximitybeacon.googleapis.com/v1beta1/"
       EIDPARAMS_URI = URI(PROXIMITY_BEACON_ROOT + "eidparams")
-      BEACON_REGISTER_URI = URI("https://proximitybeacon.googleapis.com/v1beta1/beacons:register")
+      BEACON_REGISTER_URI = URI(PROXIMITY_BEACON_ROOT + "beacons:register")
 
       attr_accessor :credentials
 
@@ -48,13 +48,13 @@ module EphemeralCalc
       end
 
       def get_resource(resource_name)
-        uri = URI("https://proximitybeacon.googleapis.com/v1beta1/#{resource_name}")
+        uri = URI(PROXIMITY_BEACON_ROOT + resource_name)
         response = Request.get(uri, credentials)
         JSON.parse(response.body)
       end
 
       def getforobserved(eids, api_key = ENV["GOOGLE_API_KEY"])
-        uri = URI("https://proximitybeacon.googleapis.com/v1beta1/beaconinfo:getforobserved?key=#{api_key}")
+        uri = URI("#{PROXIMITY_BEACON_ROOT}beaconinfo:getforobserved?key=#{api_key}")
         response = Request.post(uri) {|request|
           observations = Array(eids).map {|eid|
             {advertisedId: {type: "EDDYSTONE_EID", id: base64_eid(eid)}}
