@@ -38,7 +38,7 @@ module EphemeralCalc
         if (200..299).include?(response.code.to_i)
           return response
         else
-          raise RuntimeError, "Error #{response.code} (#{response.msg}) - #{uri}\n#{response.body}"
+          raise RequestError.new(response.code.to_i), "Error #{response.code} (#{response.msg}) - #{uri}\n#{response.body}"
         end
       end
 
@@ -56,5 +56,13 @@ module EphemeralCalc
           end
       end
     end
+
+    class RequestError < StandardError
+      attr_accessor :code
+      def initialize(code)
+        self.code = code
+      end
+    end
+
   end
 end

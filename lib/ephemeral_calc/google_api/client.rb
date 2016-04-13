@@ -47,6 +47,37 @@ module EphemeralCalc
         JSON.parse(response.body)
       end
 
+      def get_resource(resource_name)
+        uri = URI("https://proximitybeacon.googleapis.com/v1beta1/#{resource_name}")
+        response = Request.get(uri, credentials)
+        JSON.parse(response.body)
+      end
+
+      def getforobserved(eids, api_key = ENV["GOOGLE_API_KEY"])
+        uri = URI("https://proximitybeacon.googleapis.com/v1beta1/beaconinfo:getforobserved?key=#{api_key}")
+        response = Request.post(uri) {|request|
+          observations = Array(eids).map {|eid|
+            {advertisedId: {type: "EDDYSTONE_EID", id: base64_eid(eid)}}
+          }
+          request.body = {
+            observations: observations,
+            namespacedTypes: "*",
+          }.to_json
+          request.add_field "Content-Type", "application/json"
+        }
+        JSON.parse(response.body)
+      end
+
+    private
+
+      def base64_eid(eid)
+        if eid.size == 16
+          Base64.strict_encode64([eid].pack("H*"))
+        else
+          Base64.strict_encode64(eid)
+        end
+      end
+
     end
   end
 end

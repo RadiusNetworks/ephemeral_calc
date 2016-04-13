@@ -38,10 +38,12 @@ Commands:
     Lists <count> EIDs, starting at <beacon_time_seconds>
 
   resolve:
-    ephemeral_calc resolve <api_key> <eid_hex>
+    ephemeral_calc resolve <eid_hex>
 
-    Resolves the given EID to a beacon contained in Google's Proximity Beacon API.  You must supply an
-    api key connected to the google project which contains the beacon.
+    Resolves the given EID to a beacon contained in Google's Proximity Beacon API. If you supply an
+    api key (via the environment variable "GOOGLE_API_KEY") it will use that and call the
+    "getforobserved" API endpoint. Otherwise it will attempt to use OAuth for authentication and
+    use the admin api endpoint to get the beacon details.
 
   eidparams:
     ephemeral_calc eidparams
@@ -130,21 +132,36 @@ eos
 
   def resolve
     require 'yaml'
-    api_key = ARGV.shift
     eid_hex = ARGV.shift
-    response = EphemeralCalc::GoogleResolver.resolve api_key, eid_hex
-    if response == nil
+    api_key = ENV["GOOGLE_API_KEY"]
+
+    if api_key
+      client = EphemeralCalc::GoogleAPI::Client.new(nil) # don't try oauth
+      response = client.getforobserved(eid_hex, api_key)
+      beacons = response["beacons"]
+      beacon = beacons[0] if beacons
+    else
+      beacon_name = "beacons/4!#{eid_hex.downcase}"
+      begin
+        beacon = oauth_client.get_resource(beacon_name)
+        attachments = oauth_client.get_resource("#{beacon_name}/attachments")
+        beacon.merge!(attachments)
+      rescue EphemeralCalc::GoogleAPI::RequestError => e
+        # if we get a 404, the EID doesn't resolve
+        raise e unless e.code == 404
+      end
+    end
+
+    if beacon == nil
       puts "Does not resolve!"
     else
-      puts response.to_yaml
+      puts beacon.to_yaml
     end
   end
 
   def eidparams
     require 'yaml'
-    client = EphemeralCalc::GoogleAPI::Client.new
-    client.credentials.save
-    eidparams = client.get_eidparams
+    eidparams = oauth_client.get_eidparams
     key_hex = to_hex(Base64.decode64(eidparams["serviceEcdhPublicKey"]))
     eidparams["serviceEcdhPublicKeyHex"] = key_hex
     puts eidparams.to_yaml
@@ -167,9 +184,7 @@ eos
     namespace = from_hex(ARGV.shift)
     instance = from_hex(ARGV.shift)
     uid_bytes = namespace + instance
-    client = EphemeralCalc::GoogleAPI::Client.new
-    client.credentials.save
-    response = client.register_eid(beacon_public_key, rotation_scaler, initial_eid, initial_clock, uid_bytes)
+    response = oauth_client.register_eid(beacon_public_key, rotation_scaler, initial_eid, initial_clock, uid_bytes)
     puts response.to_yaml
   end
 
@@ -190,6 +205,15 @@ eos
     else
       "#{seconds}s"
     end
+  end
+
+  def oauth_client
+    @oauth_client ||=
+      begin
+        client = EphemeralCalc::GoogleAPI::Client.new
+        client.credentials.save
+        client
+      end
   end
 end
 
