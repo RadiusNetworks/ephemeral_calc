@@ -17,12 +17,11 @@ module EphemeralCalc
         self.credentials = credentials
       end
 
-      def get_eidparams
+      def eidparams
         response = Request.get(EIDPARAMS_URI, credentials)
         # response = request(:get, EIDPARAMS_URI, credentials.access_token)
         return JSON.parse(response.body)
       end
-
 
       def register_eid(beacon_public_key, rotation_exp, initial_eid, initial_clock, uid_bytes)
         service_public_key_base64 = get_eidparams["serviceEcdhPublicKey"]

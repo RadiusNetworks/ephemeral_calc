@@ -161,7 +161,7 @@ eos
 
   def eidparams
     require 'yaml'
-    eidparams = oauth_client.get_eidparams
+    eidparams = oauth_client.eidparams
     key_hex = to_hex(Base64.decode64(eidparams["serviceEcdhPublicKey"]))
     eidparams["serviceEcdhPublicKeyHex"] = key_hex
     puts eidparams.to_yaml
