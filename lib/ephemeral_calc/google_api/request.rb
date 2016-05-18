@@ -11,13 +11,13 @@ module EphemeralCalc
       def_delegators :request, :add_field, :body=
 
       def self.get(uri, credentials = nil)
-        r = self.new(:get, uri, credentials)
-        r.perform {|r| yield r if block_given? }
+        result = self.new(:get, uri, credentials)
+        result.perform {|r| yield r if block_given? }
       end
 
       def self.post(uri, credentials = nil)
-        r = self.new(:post, uri, credentials)
-        r.perform {|r| yield r if block_given? }
+        result = self.new(:post, uri, credentials)
+        result.perform {|r| yield r if block_given? }
       end
 
       def initialize(method, uri, credentials = nil)

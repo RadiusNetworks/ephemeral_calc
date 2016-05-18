@@ -1,5 +1,3 @@
-require 'spec_Helper'
-
 module EphemeralCalc
   RSpec.describe KeyPair do
     let(:resolver_private_key) { "61136adab1bf302f1c49e860196aeefd8fbaa41518b4c226372d6cc469c47278" }

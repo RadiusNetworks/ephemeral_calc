@@ -1,5 +1,3 @@
-require 'spec_Helper'
-
 module EphemeralCalc
   RSpec.describe Encryptor do
     let(:identity_key_hex) { "0102030405060708090A111213141516" }
