@@ -40,7 +40,6 @@ module EphemeralCalc
 
     # yields the current EID and each subsuquent EID, until the block returns :stop
     def each_identifier
-      rotation_seconds = 2**rotation_scalar
       last_quantum = nil
       loop do
         if quantum != last_quantum
