@@ -1,4 +1,5 @@
 require 'openssl'
+require 'securerandom'
 
 module EphemeralCalc
   class KeyPair

@@ -1,3 +1,4 @@
+require 'forwardable'
 require 'uri'
 require 'net/http'
 require 'base64'
