@@ -13,7 +13,7 @@ module EphemeralCalc
                 :beacon_time_zero,
                 :beacon_name
 
-    def initialize(name:,
+    def initialize(name: nil,
                    rotation_exp: nil,
                    namespace: nil,
                    instance: nil,
