@@ -53,11 +53,13 @@ Commands:
     access the API.
 
   register:
-    ephemeral_calc register <beacon_public_key> <rotation_scaler> <initial_eid> <initial_clock> <namespace> <instance>
+    ephemeral_calc register <beacon_description> [<rotation_exp> [<namespace> [<instance]]]
 
-    Registers an EID beacon with Google's Proximity Beacon API. All keys and byte strings should be in hex.
-    Uses environment variables "GOOGLE_CLIENT_ID" and "GOOGLE_CLIENT_SECRET" to do the necessary OAuth in
-    order to access the API.
+    Registers an EID beacon with Google's Proximity Beacon API. All byte strings should be in hex. If you
+    do not supply a namespace it will use the following: 'e3dd811dd3bbe49e630a'. If you do not supply an
+    instance it will randomly generate one. Uses environment variables "GOOGLE_CLIENT_ID" and
+    "GOOGLE_CLIENT_SECRET" to do the neccessary OAuth in order to access the API. Outputs YAML which
+    contains all the information necessary to advertise as this registered beacon.
 
   keygen:
     ephemeral_calc keygen
@@ -176,36 +178,18 @@ eos
 
   def register
     require 'yaml'
-    beacon_public_key = from_hex(ARGV.shift)
-    rotation_scaler = ARGV.shift
-    initial_eid = from_hex(ARGV.shift)
-    initial_clock = ARGV.shift
-    namespace = from_hex(ARGV.shift)
-    instance = from_hex(ARGV.shift)
-    uid_bytes = namespace + instance
-
-    client = ProximityBeacon::Client.new
-
-    default_namespace = "e3dd811dd3bbe49e630a"
-    random_instance = SecureRandom.random_bytes(6).unpack("H*")[0]
-
-    beacon = ProximityBeacon::Beacon.new(
-      ephemeral_id_registration: {
-        beaconEcdhPublicKey: Base64.strict_encode64(beacon_public_key),
-        serviceEcdhPublicKey: client.eidparams["serviceEcdhPublicKey"],
-        rotationPeriodExponent: rotation_scaler.to_i,
-        initialClockValue: 0,
-        initialEid: Base64.strict_encode64(initial_eid)
-      },
-      advertised_id: ProximityBeacon::AdvertisedId.new(
-        eddystone_ids: [namespace, instance]
-      ),
-      status: "ACTIVE",
-      description: "EphemeralCalc beacon",
+    name = ARGV.shift
+    rotation_exp = ARGV.shift
+    namespace = ARGV.shift
+    instance = ARGV.shift
+    registration = EphemeralCalc::Registration.new(
+      name: name,
+      rotation_exp: rotation_exp,
+      namespace: namespace,
+      instance: instance
     )
-
-    client = ProximityBeacon::Client.new
-    puts client.beacons.register(beacon).inspect
+    registration.register
+    puts registration.to_yaml
   end
 
   def keygen
