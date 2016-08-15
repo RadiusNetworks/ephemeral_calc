@@ -135,18 +135,17 @@ eos
     eid_hex = ARGV.shift
     api_key = ENV["GOOGLE_API_KEY"]
 
+    client = ProximityBeacon::Client.new
     if api_key
-      client = EphemeralCalc::GoogleAPI::Client.new(nil) # don't try oauth
       response = client.getforobserved(eid_hex, api_key)
       beacons = response["beacons"]
       beacon = beacons[0] if beacons
     else
       beacon_name = "beacons/4!#{eid_hex.downcase}"
       begin
-        beacon = oauth_client.get_resource(beacon_name)
-        attachments = oauth_client.get_resource("#{beacon_name}/attachments")
-        beacon.merge!(attachments)
-      rescue EphemeralCalc::GoogleAPI::RequestError => e
+        beacon = client.beacons.get(beacon_name).as_json
+        beacon["attachments"] = client.attachments.list(beacon_name).map(&:as_json)
+      rescue ProximityBeacon::Client::RequestError => e
         # if we get a 404, the EID doesn't resolve
         raise e unless e.code == 404
       end
@@ -161,7 +160,7 @@ eos
 
   def eidparams
     require 'yaml'
-    eidparams = oauth_client.eidparams
+    eidparams = ProximityBeacon::Client.new.eidparams
     key_hex = to_hex(Base64.decode64(eidparams["serviceEcdhPublicKey"]))
     eidparams["serviceEcdhPublicKeyHex"] = key_hex
     puts eidparams.to_yaml
@@ -184,8 +183,29 @@ eos
     namespace = from_hex(ARGV.shift)
     instance = from_hex(ARGV.shift)
     uid_bytes = namespace + instance
-    response = oauth_client.register_eid(beacon_public_key, rotation_scaler, initial_eid, initial_clock, uid_bytes)
-    puts response.to_yaml
+
+    client = ProximityBeacon::Client.new
+
+    default_namespace = "e3dd811dd3bbe49e630a"
+    random_instance = SecureRandom.random_bytes(6).unpack("H*")[0]
+
+    beacon = ProximityBeacon::Beacon.new(
+      ephemeral_id_registration: {
+        beaconEcdhPublicKey: Base64.strict_encode64(beacon_public_key),
+        serviceEcdhPublicKey: client.eidparams["serviceEcdhPublicKey"],
+        rotationPeriodExponent: rotation_scaler.to_i,
+        initialClockValue: 0,
+        initialEid: Base64.strict_encode64(initial_eid)
+      },
+      advertised_id: ProximityBeacon::AdvertisedId.new(
+        eddystone_ids: [namespace, instance]
+      ),
+      status: "ACTIVE",
+      description: "EphemeralCalc beacon",
+    )
+
+    client = ProximityBeacon::Client.new
+    puts client.beacons.register(beacon).inspect
   end
 
   def keygen
@@ -207,14 +227,6 @@ eos
     end
   end
 
-  def oauth_client
-    @oauth_client ||=
-      begin
-        client = EphemeralCalc::GoogleAPI::Client.new
-        client.credentials.save
-        client
-      end
-  end
 end
 
 app = App.new
