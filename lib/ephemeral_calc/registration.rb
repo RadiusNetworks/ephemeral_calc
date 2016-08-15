@@ -4,20 +4,21 @@ module EphemeralCalc
     DEFAULT_NAMESPACE = "e3dd811dd3bbe49e630a"
     DEFAULT_ROTATION_EXP = 12 # 2^12 = ~68 minutes
 
-    attr_reader :name,
+    attr_reader :description,
                 :rotation_exp,
                 :namespace,
                 :instance,
                 :beacon_private_key,
                 :beacon_keypair,
-                :beacon_time_zero
+                :beacon_time_zero,
+                :beacon_name
 
     def initialize(name:,
                    rotation_exp: nil,
                    namespace: nil,
                    instance: nil,
                    beacon_private_key: nil)
-      @name = name
+      @description = name
       @rotation_exp = (rotation_exp || DEFAULT_ROTATION_EXP).to_i
       @namespace = namespace || DEFAULT_NAMESPACE
       @instance = instance || random_instance
@@ -62,13 +63,15 @@ module EphemeralCalc
           eddystone_ids: [namespace, instance]
         ),
         status: "ACTIVE",
-        description: self.name,
+        description: self.description,
       )
-      api_client.beacons.register(beacon)
+      registered_beacon = api_client.beacons.register(beacon)
+      @beacon_name = registered_beacon.name
     end
 
     def as_yaml
       {
+        beacon_name: beacon_name,
         identity_key: identity_key,
         rotation_exp: rotation_exp,
         initial_time: encryptor.initial_time,
