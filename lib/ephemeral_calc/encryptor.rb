@@ -84,7 +84,7 @@ module EphemeralCalc
     end
 
     def do_aes_encryption(key, data)
-      aes = OpenSSL::Cipher::Cipher.new("AES-128-ECB")
+      aes = OpenSSL::Cipher.new("AES-128-ECB")
       aes.encrypt
       aes.key = key
       #aes.iv = "what do I put here?"
