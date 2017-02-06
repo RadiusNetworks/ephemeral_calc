@@ -105,7 +105,3 @@ end
 
 # Require our gem
 require 'ephemeral_calc'
-
-# Include Mocking Web Requests Globally
-require 'webmock/rspec'
-WebMock.disable_net_connect!
