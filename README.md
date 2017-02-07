@@ -1,4 +1,4 @@
-# EphemeralCalc
+# EphemeralCalc [![Build Status](https://travis-ci.org/RadiusNetworks/ephemeral_calc.svg?branch=master)](https://travis-ci.org/RadiusNetworks/ephemeral_calc) [![Gem Version](https://badge.fury.io/rb/ephemeral_calc.svg)](https://badge.fury.io/rb/ephemeral_calc)
 
 A Ruby gem that allows you to calculate ephemeral identifiers for Eddystone-EID beacons.
 
